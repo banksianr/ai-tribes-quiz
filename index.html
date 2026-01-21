@@ -329,6 +329,10 @@
             margin-top: 30px;
             font-style: italic;
         }
+
+        #chartCanvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -535,6 +539,9 @@
 
             <!-- Share Buttons -->
             <div class="share-buttons">
+                <button class="share-btn" onclick="downloadResultImage()" style="border-color: #ff6b6b; color: #ff6b6b;">
+                    📸 Download Result Image
+                </button>
                 <a href="#" id="shareTwitter" class="share-btn twitter" target="_blank">
                     🐦 Share on Twitter
                 </a>
@@ -551,6 +558,9 @@
 
         <p class="disclaimer">This is a fun, informal quiz - not a scientific assessment!</p>
     </div>
+
+    <!-- Hidden canvas for generating chart image -->
+    <canvas id="chartCanvas" width="800" height="900"></canvas>
 
     <script>
         let currentQuestion = 1;
@@ -644,6 +654,142 @@
             // LinkedIn
             document.getElementById('shareLinkedIn').href =
                 `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        }
+
+        function downloadResultImage() {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            const avgX = xScore / totalQuestions;
+            const avgY = yScore / totalQuestions;
+            const result = getQuadrantDescription(avgX, avgY);
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // White card background
+            ctx.fillStyle = 'white';
+            ctx.roundRect(40, 40, 720, 820, 20);
+            ctx.fill();
+
+            // Title
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = 'bold 48px Helvetica, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Which AI Tribe Are You?', 400, 120);
+
+            // Result title
+            ctx.font = 'bold 40px Helvetica, Arial, sans-serif';
+            ctx.fillText(result.title.replace(/[^\x00-\x7F]/g, ''), 400, 180);
+
+            // Draw chart (500x500, centered)
+            const chartX = 150;
+            const chartY = 220;
+            const chartSize = 500;
+
+            // Chart background
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(chartX, chartY, chartSize, chartSize);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(chartX, chartY, chartSize, chartSize);
+
+            // Center lines
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(chartX + chartSize/2, chartY);
+            ctx.lineTo(chartX + chartSize/2, chartY + chartSize);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(chartX, chartY + chartSize/2);
+            ctx.lineTo(chartX + chartSize, chartY + chartSize/2);
+            ctx.stroke();
+
+            // Axis labels
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Helvetica, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('GO FAST', 400, chartY - 10);
+            ctx.fillText('SLOW DOWN', 400, chartY + chartSize + 25);
+
+            ctx.save();
+            ctx.translate(chartX - 20, chartY + chartSize/2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Incremental Change', 0, 0);
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(chartX + chartSize + 20, chartY + chartSize/2);
+            ctx.rotate(Math.PI / 2);
+            ctx.fillText('Transformative Power', 0, 0);
+            ctx.restore();
+
+            // Quadrant labels
+            ctx.font = 'bold 24px Helvetica, Arial, sans-serif';
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillText('Techno-Optimist', chartX + chartSize/4, chartY + chartSize/4);
+            ctx.fillText('E/ACC', chartX + 3*chartSize/4, chartY + chartSize/4);
+            ctx.fillText('Safetyist', chartX + chartSize/4, chartY + 3*chartSize/4);
+            ctx.fillText('Doomer', chartX + 3*chartSize/4, chartY + 3*chartSize/4);
+
+            // User dot
+            const dotX = chartX + (avgX / 10) * chartSize;
+            const dotY = chartY + (1 - (avgY / 10)) * chartSize;
+
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(dotX, dotY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Coordinates
+            ctx.fillStyle = '#666';
+            ctx.font = '18px Helvetica, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Capabilities: ${avgX.toFixed(1)}/10 | Speed: ${avgY.toFixed(1)}/10`, 400, chartY + chartSize + 60);
+
+            // Footer
+            ctx.fillStyle = '#999';
+            ctx.font = 'italic 16px Helvetica, Arial, sans-serif';
+            ctx.fillText('Take the quiz at: banksianr.github.io/ai-tribes-quiz', 400, 840);
+
+            // Download the image
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'my-ai-tribe-result.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Polyfill for roundRect if not available
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+            };
         }
 
         function restart() {
