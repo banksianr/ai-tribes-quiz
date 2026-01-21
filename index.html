@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Which AI Tribe Are You? Take This Quiz To Find Out!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .question {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .question.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .answer-option {
+            background: #f8f9fa;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+
+        .answer-option:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+        }
+
+        .result.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .result-title {
+            font-size: 2.2em;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-weight: 900;
+        }
+
+        .result-description {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            margin: 30px auto;
+            background: #f8f9fa;
+            border: 2px solid #333;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-weight: 700;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .axis-label.top {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .axis-label.bottom {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .axis-label.left {
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            transform-origin: center;
+        }
+
+        .axis-label.right {
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            transform-origin: center;
+        }
+
+        .quadrant-label {
+            position: absolute;
+            font-size: 1.2em;
+            font-weight: 700;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .quadrant-label.top-left {
+            top: 25%;
+            left: 25%;
+            transform: translate(-50%, -50%);
+        }
+
+        .quadrant-label.top-right {
+            top: 25%;
+            right: 25%;
+            transform: translate(50%, -50%);
+        }
+
+        .quadrant-label.bottom-left {
+            bottom: 25%;
+            left: 25%;
+            transform: translate(-50%, 50%);
+        }
+
+        .quadrant-label.bottom-right {
+            bottom: 25%;
+            right: 25%;
+            transform: translate(50%, 50%);
+        }
+
+        .center-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .vertical-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: #ccc;
+        }
+
+        .horizontal-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: #ccc;
+        }
+
+        .user-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff6b6b;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .progress {
+            background: #e9ecef;
+            height: 10px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .coordinates {
+            font-size: 1em;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Which AI Tribe Are You?</h1>
+        <p class="subtitle">Answer these questions to discover where you stand on AI!</p>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Question 1 -->
+        <div class="question active" data-question="1">
+            <h2 class="question-title">1. It's Friday night and you see a new AI model was just released. You:</h2>
+            <div class="answer-option" data-x="9" data-y="9">
+                Immediately start training it on the largest dataset you can find and tweet "LFG"
+            </div>
+            <div class="answer-option" data-x="3" data-y="8">
+                Play around with it casually, excited to see what it can do
+            </div>
+            <div class="answer-option" data-x="6" data-y="3">
+                Read the safety documentation first and check if it has proper guardrails
+            </div>
+            <div class="answer-option" data-x="8" data-y="1">
+                Feel anxious about how fast capabilities are advancing
+            </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="question" data-question="2">
+            <h2 class="question-title">2. When someone mentions "AI regulation," your first thought is:</h2>
+            <div class="answer-option" data-x="8" data-y="0">
+                "We need strict international oversight and capability limits NOW"
+            </div>
+            <div class="answer-option" data-x="5" data-y="3">
+                "Yes, thoughtful regulation to ensure safety and fairness"
+            </div>
+            <div class="answer-option" data-x="3" data-y="7">
+                "Markets will figure it out naturally, no need to interfere"
+            </div>
+            <div class="answer-option" data-x="9" data-y="10">
+                "Absolutely not. Innovation doesn't wait for permission"
+            </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="question" data-question="3">
+            <h2 class="question-title">3. AGI (Artificial General Intelligence) will most likely:</h2>
+            <div class="answer-option" data-x="10" data-y="10">
+                Solve all of humanity's problems and usher in a post-scarcity utopia
+            </div>
+            <div class="answer-option" data-x="4" data-y="7">
+                Be useful and transformative, like the internet or smartphones
+            </div>
+            <div class="answer-option" data-x="7" data-y="4">
+                Be incredibly powerful but needs careful development to avoid catastrophe
+            </div>
+            <div class="answer-option" data-x="9" data-y="1">
+                Pose an existential risk if we don't fundamentally change our approach
+            </div>
+        </div>
+
+        <!-- Question 4 -->
+        <div class="question" data-question="4">
+            <h2 class="question-title">4. Your ideal timeline for achieving AGI is:</h2>
+            <div class="answer-option" data-x="9" data-y="10">
+                ASAP - this decade if possible
+            </div>
+            <div class="answer-option" data-x="5" data-y="7">
+                Within 20-30 years seems reasonable
+            </div>
+            <div class="answer-option" data-x="7" data-y="3">
+                50+ years, we need time to get safety right
+            </div>
+            <div class="answer-option" data-x="8" data-y="0">
+                Maybe never, or at least not until we solve alignment
+            </div>
+        </div>
+
+        <!-- Question 5 -->
+        <div class="question" data-question="5">
+            <h2 class="question-title">5. How do you feel about open-sourcing frontier AI models?</h2>
+            <div class="answer-option" data-x="8" data-y="10">
+                Essential for progress - information wants to be free
+            </div>
+            <div class="answer-option" data-x="4" data-y="7">
+                Generally good for innovation and competition
+            </div>
+            <div class="answer-option" data-x="6" data-y="4">
+                Risky - we need some controls on the most powerful models
+            </div>
+            <div class="answer-option" data-x="9" data-y="1">
+                Dangerous - it's like open-sourcing bioweapons
+            </div>
+        </div>
+
+        <!-- Question 6 -->
+        <div class="question" data-question="6">
+            <h2 class="question-title">6. The best comparison for advanced AI is:</h2>
+            <div class="answer-option" data-x="3" data-y="6">
+                The internet - transformative but we'll adapt fine
+            </div>
+            <div class="answer-option" data-x="10" data-y="9">
+                Fire, the wheel, agriculture - foundational to a new civilization
+            </div>
+            <div class="answer-option" data-x="7" data-y="4">
+                Nuclear energy - immensely powerful and needs proper safeguards
+            </div>
+            <div class="answer-option" data-x="9" data-y="2">
+                Summoning an alien superintelligence we don't understand
+            </div>
+        </div>
+
+        <!-- Question 7 -->
+        <div class="question" data-question="7">
+            <h2 class="question-title">7. AI safety research should be:</h2>
+            <div class="answer-option" data-x="8" data-y="2">
+                The primary focus - pause capabilities until we solve alignment
+            </div>
+            <div class="answer-option" data-x="6" data-y="4">
+                A major priority alongside capabilities research
+            </div>
+            <div class="answer-option" data-x="4" data-y="6">
+                Important but shouldn't slow down progress too much
+            </div>
+            <div class="answer-option" data-x="8" data-y="9">
+                Overrated - most concerns are hypothetical fearmongering
+            </div>
+        </div>
+
+        <!-- Question 8 -->
+        <div class="question" data-question="8">
+            <h2 class="question-title">8. If we develop superintelligent AI, it will be:</h2>
+            <div class="answer-option" data-x="10" data-y="8">
+                Humanity's greatest achievement and the key to our transcendence
+            </div>
+            <div class="answer-option" data-x="4" data-y="6">
+                A powerful tool that we'll learn to use responsibly
+            </div>
+            <div class="answer-option" data-x="8" data-y="3">
+                Extremely dangerous unless we solve alignment perfectly
+            </div>
+            <div class="answer-option" data-x="9" data-y="1">
+                The end of humanity as we know it if we're not incredibly careful
+            </div>
+        </div>
+
+        <!-- Question 9 -->
+        <div class="question" data-question="9">
+            <h2 class="question-title">9. What's your take on the current AI race between companies/countries?</h2>
+            <div class="answer-option" data-x="9" data-y="10">
+                Great! Competition drives innovation and ensures no monopoly
+            </div>
+            <div class="answer-option" data-x="5" data-y="7">
+                Natural and mostly healthy for technological progress
+            </div>
+            <div class="answer-option" data-x="7" data-y="3">
+                Concerning - we need more coordination on safety standards
+            </div>
+            <div class="answer-option" data-x="8" data-y="0">
+                Terrifying - it's a race to the bottom on safety
+            </div>
+        </div>
+
+        <!-- Question 10 -->
+        <div class="question" data-question="10">
+            <h2 class="question-title">10. Your dream outcome for AI is:</h2>
+            <div class="answer-option" data-x="10" data-y="10">
+                Merge with AI, achieve digital immortality, colonize the stars
+            </div>
+            <div class="answer-option" data-x="4" data-y="8">
+                AI becomes a helpful assistant that improves quality of life
+            </div>
+            <div class="answer-option" data-x="6" data-y="4">
+                AI that's powerful but carefully controlled and equitably distributed
+            </div>
+            <div class="answer-option" data-x="7" data-y="2">
+                We develop AI very slowly and cautiously to avoid catastrophic risks
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div class="result" id="result">
+            <h2 class="result-title" id="resultTitle">Your AI Tribe Position</h2>
+            <div class="chart-container">
+                <div class="center-lines">
+                    <div class="vertical-line"></div>
+                    <div class="horizontal-line"></div>
+                </div>
+                <div class="axis-label top">GO FAST ⚡</div>
+                <div class="axis-label bottom">SLOW DOWN 🛑</div>
+                <div class="axis-label left">Incremental Change</div>
+                <div class="axis-label right">Transformative Power</div>
+
+                <div class="quadrant-label top-left">Techno-Optimist<br>😎</div>
+                <div class="quadrant-label top-right">E/ACC<br>⚡</div>
+                <div class="quadrant-label bottom-left">Safetyist<br>🛡️</div>
+                <div class="quadrant-label bottom-right">Doomer<br>⚠️</div>
+
+                <div class="user-dot" id="userDot"></div>
+            </div>
+            <p class="result-description" id="resultDescription"></p>
+            <p class="coordinates" id="coordinates"></p>
+            <button class="restart-btn" onclick="restart()">Take Quiz Again</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        const totalQuestions = 10;
+        let xScore = 0;
+        let yScore = 0;
+
+        function updateProgress() {
+            const progress = ((currentQuestion - 1) / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function getQuadrantDescription(x, y) {
+            let description = "";
+            let title = "";
+
+            // Normalize to 0-1 range for easier calculations
+            const normalizedX = x / 10;
+            const normalizedY = y / 10;
+
+            // Determine primary tribe based on quadrant
+            if (normalizedX < 0.5 && normalizedY >= 0.5) {
+                title = "You're a Techno-Optimist! 😎";
+                description = "You believe in moving fast with AI development and see it as an incremental improvement like previous technologies. You think markets and innovation will naturally solve problems, and heavy regulation will just slow down progress. Technology has always made life better - why would AI be different?";
+            } else if (normalizedX >= 0.5 && normalizedY >= 0.5) {
+                title = "You're E/ACC! ⚡";
+                description = "Effective Accelerationism is your philosophy. You believe AI represents transformative, civilization-altering power, and the only way forward is FORWARD - at maximum speed. You think humanity's destiny is to transcend through technology, and anyone trying to slow this down is standing in the way of our greatest achievement.";
+            } else if (normalizedX < 0.5 && normalizedY < 0.5) {
+                title = "You're a Safetyist! 🛡️";
+                description = "You want to pump the brakes and focus on responsible AI development. You see AI as incrementally powerful but believe we need proper guardrails, safety research, and regulation. Moving carefully doesn't mean being anti-progress - it means ensuring progress actually benefits everyone fairly and safely.";
+            } else {
+                title = "You're a Doomer! ⚠️";
+                description = "You believe we're playing with existential fire. AI represents transformative power that could pose catastrophic risks if developed too quickly. You want international coordination, strict oversight, and potentially a pause on large AI experiments until we solve fundamental alignment problems. Better safe than extinct.";
+            }
+
+            // Add nuance based on how close to center
+            const distanceFromCenter = Math.sqrt(Math.pow(normalizedX - 0.5, 2) + Math.pow(normalizedY - 0.5, 2));
+            if (distanceFromCenter < 0.2) {
+                description += " <br><br>You're fairly moderate though - you can see merit in multiple perspectives on AI development.";
+            }
+
+            return { title, description };
+        }
+
+        function showResult() {
+            // Calculate average scores
+            const avgX = xScore / totalQuestions;
+            const avgY = yScore / totalQuestions;
+
+            // Hide all questions
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+
+            // Show result
+            document.getElementById('result').classList.add('active');
+
+            // Position dot (convert 0-10 scale to pixel position)
+            // Chart is 500px, need to account for margins
+            const xPercent = (avgX / 10) * 100;
+            const yPercent = (1 - (avgY / 10)) * 100; // Invert Y because CSS coordinates
+
+            const dot = document.getElementById('userDot');
+            dot.style.left = xPercent + '%';
+            dot.style.top = yPercent + '%';
+
+            // Get and display description
+            const result = getQuadrantDescription(avgX, avgY);
+            document.getElementById('resultTitle').textContent = result.title;
+            document.getElementById('resultDescription').innerHTML = result.description;
+            document.getElementById('coordinates').textContent =
+                `Your position: Capabilities: ${avgX.toFixed(1)}/10 | Speed: ${avgY.toFixed(1)}/10`;
+
+            // Complete progress bar
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        function restart() {
+            currentQuestion = 1;
+            xScore = 0;
+            yScore = 0;
+
+            // Hide result
+            document.getElementById('result').classList.remove('active');
+
+            // Show first question
+            document.querySelector('[data-question="1"]').classList.add('active');
+
+            updateProgress();
+        }
+
+        // Add click handlers to all answer options
+        document.querySelectorAll('.answer-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const x = parseFloat(this.getAttribute('data-x'));
+                const y = parseFloat(this.getAttribute('data-y'));
+
+                xScore += x;
+                yScore += y;
+
+                // Hide current question
+                document.querySelector('.question.active').classList.remove('active');
+
+                // Move to next question or show result
+                currentQuestion++;
+
+                if (currentQuestion <= totalQuestions) {
+                    document.querySelector(`[data-question="${currentQuestion}"]`).classList.add('active');
+                    updateProgress();
+                } else {
+                    showResult();
+                }
+            });
+        });
+
+        // Initialize progress bar
+        updateProgress();
+    </script>
+</body>
+</html>
